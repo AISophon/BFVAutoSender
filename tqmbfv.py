@@ -27,9 +27,18 @@ def send_keyboard_messages(range_time, range_rest, messages):
         for message in messages:
             if stop_event.is_set():  # 检查是否请求停止
                 return
-            press_enter()
-            keyboard.type(message)
-            press_enter()
+            global hwnd
+            global self
+            if hwnd:
+                ctypes.windll.user32.SetForegroundWindow(hwnd)  # 激活窗口
+                time.sleep(0.5)  # 等待窗口激活
+                press_enter()
+                keyboard.type(message)
+                press_enter()
+            else:
+                display_messagebox()
+                self.stop_sending()
+
         time.sleep(range_rest)
 
 
@@ -55,7 +64,7 @@ class App:
     def create_widgets(self, vcmd):
         tk.Label(
             self.master,
-            text="欢迎使用战地5公告机！如有问题请加QQ群：619982307",
+            text="欢迎使用战地5公告机！本软件免费开源，如有问题请加QQ群：619982307",
             anchor="w",
             padx=15,
         ).pack(fill=tk.X)
@@ -86,12 +95,12 @@ class App:
         self.start_button = tk.Button(
             self.master, text="开始发送", command=self.start_sending
         )
-        self.start_button.pack(side=tk.LEFT, padx=10, pady=10)
+        self.start_button.pack(side=tk.LEFT, padx=15, pady=10)
 
         self.stop_button = tk.Button(
             self.master, text="停止发送", command=self.stop_sending, state=tk.DISABLED
         )
-        self.stop_button.pack(side=tk.LEFT, padx=10, pady=10)
+        self.stop_button.pack(side=tk.LEFT, padx=0, pady=10)
 
     def create_entry(self, label_text, default_value, vcmd):
         tk.Label(self.master, text=label_text, anchor="w", padx=15).pack(fill=tk.X)
@@ -109,27 +118,20 @@ class App:
         self.stop_button.config(state=tk.NORMAL)  # 启用停止按钮
         stop_event.clear()  # 清除停止事件
 
-        global hwnd
-        if hwnd:
-            ctypes.windll.user32.SetForegroundWindow(hwnd)  # 激活窗口
-            time.sleep(0.5)  # 等待窗口激活
-            try:
-                range_time = int(self.entry_range_time.get())
-                range_rest = int(self.entry_range_rest.get())
-            except ValueError:
-                range_time, range_rest = 10, 120
-            messages = [
-                self.entry_welcome.get(),
-                self.entry_text.get(),
-                self.entry_join.get(),
-            ]
-            time.sleep(5)  # 延迟5秒后开始发送
-            threading.Thread(
-                target=send_keyboard_messages, args=(range_time, range_rest, messages)
-            ).start()
-        else:
-            display_messagebox()
-            self.stop_sending()
+        try:
+            range_time = int(self.entry_range_time.get())
+            range_rest = int(self.entry_range_rest.get())
+        except ValueError:
+            range_time, range_rest = 10, 120
+        messages = [
+            self.entry_welcome.get(),
+            self.entry_text.get(),
+            self.entry_join.get(),
+        ]
+        time.sleep(5)  # 延迟5秒后开始发送
+        threading.Thread(
+            target=send_keyboard_messages, args=(range_time, range_rest, messages)
+        ).start()
 
     def stop_sending(self):
         stop_event.set()  # 设置停止事件
