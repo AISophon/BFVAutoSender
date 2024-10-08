@@ -8,7 +8,6 @@ import time
 keyboard = Controller()
 stop_event = threading.Event()
 window_title = "Battlefield™ V"
-hwnd = ctypes.windll.user32.FindWindowW(None, window_title)
 
 
 def display_messagebox():
@@ -29,6 +28,7 @@ def send_keyboard_messages(range_time, range_rest, messages):
                 return
             global hwnd
             global self
+            hwnd = ctypes.windll.user32.FindWindowW(None, window_title)
             if hwnd:
                 ctypes.windll.user32.SetForegroundWindow(hwnd)  # 激活窗口
                 time.sleep(0.5)  # 等待窗口激活
