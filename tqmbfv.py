@@ -1,11 +1,10 @@
 import tkinter as tk
 import tkinter.messagebox
-from pynput.keyboard import Controller, Key
 import threading
 import ctypes
 import time
+import pyautogui
 
-keyboard = Controller()
 stop_event = threading.Event()
 window_title = "Battlefield™ V"
 
@@ -15,9 +14,7 @@ def display_messagebox():
 
 
 def press_enter():
-    keyboard.press(Key.enter)
-    time.sleep(0.1)
-    keyboard.release(Key.enter)
+    pyautogui.press("enter")  # 使用 pyautogui 发送 Enter 键
     time.sleep(0.2)
 
 
@@ -26,18 +23,18 @@ def send_keyboard_messages(range_time, range_rest, messages):
         for message in messages:
             if stop_event.is_set():  # 检查是否请求停止
                 return
-            global hwnd
-            global self
+
             hwnd = ctypes.windll.user32.FindWindowW(None, window_title)
             if hwnd:
                 ctypes.windll.user32.SetForegroundWindow(hwnd)  # 激活窗口
                 time.sleep(0.5)  # 等待窗口激活
+
                 press_enter()
-                keyboard.type(message)
+                pyautogui.typewrite(message)  # 使用 pyautogui 发送消息
                 press_enter()
             else:
                 display_messagebox()
-                self.stop_sending()
+                # self.stop_sending()  # 确认是否需要这行代码，视具体实现而定
 
         time.sleep(range_rest)
 
